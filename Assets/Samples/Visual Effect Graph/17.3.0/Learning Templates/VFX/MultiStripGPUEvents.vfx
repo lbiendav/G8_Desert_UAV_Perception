@@ -328,12 +328,6 @@ MonoBehaviour:
     - model: {fileID: 8926484042661618433}
       id: 0
       isStickyNote: 0
-    - model: {fileID: 8926484042661618437}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661618440}
-      id: 0
-      isStickyNote: 0
     - model: {fileID: 8926484042661618608}
       id: 0
       isStickyNote: 0
@@ -354,9 +348,6 @@ MonoBehaviour:
     - model: {fileID: 8926484042661620850}
       id: 0
       isStickyNote: 0
-    - model: {fileID: 8926484042661620852}
-      id: 0
-      isStickyNote: 0
     - model: {fileID: 0}
       id: 0
       isStickyNote: 1
@@ -369,33 +360,6 @@ MonoBehaviour:
       height: 1474
     contents:
     - model: {fileID: 8926484042661618444}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661618459}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661618461}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661620406}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661618788}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661618758}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661618777}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661620770}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661620472}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661621158}
       id: 0
       isStickyNote: 0
     - model: {fileID: 8926484042661618597}
@@ -479,18 +443,6 @@ MonoBehaviour:
     - model: {fileID: 8926484042661618519}
       id: 0
       isStickyNote: 0
-    - model: {fileID: 8926484042661618540}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661618544}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661618550}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661618557}
-      id: 0
-      isStickyNote: 0
     - model: {fileID: 8926484042661618638}
       id: 0
       isStickyNote: 0
@@ -515,30 +467,6 @@ MonoBehaviour:
       height: 1027
     contents:
     - model: {fileID: 8926484042661619791}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661619806}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661619808}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661619810}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661619844}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661619846}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661619848}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661619850}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661619838}
       id: 0
       isStickyNote: 0
     - model: {fileID: 8926484042661619883}
@@ -588,31 +516,7 @@ MonoBehaviour:
     - model: {fileID: 8926484042661619764}
       id: 0
       isStickyNote: 0
-    - model: {fileID: 8926484042661619771}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661619774}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661619777}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661619780}
-      id: 0
-      isStickyNote: 0
     - model: {fileID: 8926484042661621130}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661621136}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661621138}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661621141}
-      id: 0
-      isStickyNote: 0
-    - model: {fileID: 8926484042661621144}
       id: 0
       isStickyNote: 0
     - model: {fileID: 8926484042661620455}
@@ -23794,7 +23698,6 @@ MonoBehaviour:
   m_UICollapsed: 0
   m_UISuperCollapsed: 0
   m_InputSlots:
-  - {fileID: 8926484042661621110}
   - {fileID: 8926484042661620548}
   m_OutputSlots: []
   m_Label: Green Lights Quad
@@ -26920,7 +26823,6 @@ MonoBehaviour:
   m_UICollapsed: 0
   m_UISuperCollapsed: 0
   m_InputSlots:
-  - {fileID: 8926484042661621111}
   - {fileID: 8926484042661620717}
   m_OutputSlots: []
   m_Label: 
@@ -33220,74 +33122,6 @@ MonoBehaviour:
     m_Space: -1
   m_Property:
     name: _Ring_center
-    m_serializedType:
-      m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
-        PublicKeyToken=b77a5c561934e089
-  m_Direction: 0
-  m_LinkedSlots: []
---- !u!114 &8926484042661621110
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f780aa281814f9842a7c076d436932e7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_UIIgnoredErrors: []
-  m_Parent: {fileID: 0}
-  m_Children: []
-  m_UIPosition: {x: 0, y: 0}
-  m_UICollapsed: 1
-  m_UISuperCollapsed: 0
-  m_MasterSlot: {fileID: 8926484042661621110}
-  m_MasterData:
-    m_Owner: {fileID: 8926484042661620547}
-    m_Value:
-      m_Type:
-        m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
-          PublicKeyToken=b77a5c561934e089
-      m_SerializableObject: 0
-    m_Space: -1
-  m_Property:
-    name: exposureWeight
-    m_serializedType:
-      m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
-        PublicKeyToken=b77a5c561934e089
-  m_Direction: 0
-  m_LinkedSlots: []
---- !u!114 &8926484042661621111
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f780aa281814f9842a7c076d436932e7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_UIIgnoredErrors: []
-  m_Parent: {fileID: 0}
-  m_Children: []
-  m_UIPosition: {x: 0, y: 0}
-  m_UICollapsed: 1
-  m_UISuperCollapsed: 0
-  m_MasterSlot: {fileID: 8926484042661621111}
-  m_MasterData:
-    m_Owner: {fileID: 8926484042661620716}
-    m_Value:
-      m_Type:
-        m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
-          PublicKeyToken=b77a5c561934e089
-      m_SerializableObject: 0
-    m_Space: -1
-  m_Property:
-    name: exposureWeight
     m_serializedType:
       m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
