@@ -23,6 +23,10 @@ public class TerrainHeatHazeMesh : MonoBehaviour
 
     public float slopeSoftness = 20f;
 
+    [Header("Terrain Layer Heat")]
+    [Tooltip("Heat multiplier per Terrain Layer index. Example: sand high, rock medium, soil low, water zero.")]
+    public float[] terrainLayerHeatMultipliers = { 1f };
+
     [Header("Auto Update")]
     public bool generateOnStart = true;
     public bool updateInEditor = true;
@@ -75,6 +79,18 @@ public class TerrainHeatHazeMesh : MonoBehaviour
         TerrainData data = terrain.terrainData;
         Vector3 size = data.size;
         Vector3 terrainPos = terrain.transform.position;
+        float[,,] alphamaps = null;
+        int alphaWidth = 0;
+        int alphaHeight = 0;
+        int alphaLayers = 0;
+
+        if (data.alphamapLayers > 0)
+        {
+            alphamaps = data.GetAlphamaps(0, 0, data.alphamapWidth, data.alphamapHeight);
+            alphaWidth = data.alphamapWidth;
+            alphaHeight = data.alphamapHeight;
+            alphaLayers = data.alphamapLayers;
+        }
 
         Mesh mesh = new Mesh();
         mesh.name = "Generated_Terrain_Heat_Haze_Mesh";
@@ -113,7 +129,8 @@ public class TerrainHeatHazeMesh : MonoBehaviour
                     slope
                 );
 
-                float mask = Mathf.Clamp01(heightMask * slopeMask);
+                float terrainLayerHeat = SampleTerrainLayerHeat(alphamaps, alphaWidth, alphaHeight, alphaLayers, nx, nz);
+                float mask = Mathf.Clamp01(heightMask * slopeMask * terrainLayerHeat);
 
                 Vector3 worldPos = new Vector3(
                     worldX,
@@ -162,5 +179,25 @@ public class TerrainHeatHazeMesh : MonoBehaviour
         mesh.RecalculateBounds();
 
         meshFilter.sharedMesh = mesh;
+    }
+
+    private float SampleTerrainLayerHeat(float[,,] alphamaps, int alphaWidth, int alphaHeight, int alphaLayers, float nx, float nz)
+    {
+        if (alphamaps == null || alphaLayers == 0)
+        {
+            return 1f;
+        }
+
+        int ax = Mathf.Clamp(Mathf.RoundToInt(nx * (alphaWidth - 1)), 0, alphaWidth - 1);
+        int az = Mathf.Clamp(Mathf.RoundToInt(nz * (alphaHeight - 1)), 0, alphaHeight - 1);
+        float heat = 0f;
+
+        for (int layer = 0; layer < alphaLayers; layer++)
+        {
+            float multiplier = layer < terrainLayerHeatMultipliers.Length ? terrainLayerHeatMultipliers[layer] : 1f;
+            heat += alphamaps[az, ax, layer] * Mathf.Max(0f, multiplier);
+        }
+
+        return Mathf.Clamp01(heat);
     }
 }

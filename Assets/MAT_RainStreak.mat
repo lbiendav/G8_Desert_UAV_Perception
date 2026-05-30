@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: MAT_HeatHaze
-  m_Shader: {fileID: 4800000, guid: 304795365317e044e9d68a5c88c21f88, type: 3}
+  m_Name: MAT_RainStreak
+  m_Shader: {fileID: 4800000, guid: 7fd5a3f2f4526c24d8aebefc9a6f4c31, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -23,25 +23,13 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _NoiseTex:
-        m_Texture: {fileID: 2800000, guid: c47b746f2206be3478cb06ab0b24bf20, type: 3}
-        m_Scale: {x: 6, y: 6}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
-    m_Floats:
-    - _Alpha: 0.28
-    - _DistanceFade: 45
-    - _DistanceStart: 5
-    - _Distortion: 0.018
-    - _FarFullDistance: 45
-    - _GlobalHeatIntensity: 1
-    - _HeightFade: 5
-    - _HeightStart: 0
-    - _NearFadeDistance: 8
-    - _RisePower: 1.15
-    - _SideWave: 0.18
-    - _Speed: 0.75
-    - _VerticalFade: 1.2
-    m_Colors: []
+    m_Floats: []
+    m_Colors:
+    - _Color: {r: 0.65, g: 0.78, b: 1, a: 0.35}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
