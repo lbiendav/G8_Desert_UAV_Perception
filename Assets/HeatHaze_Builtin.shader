@@ -4,6 +4,7 @@ Shader "Custom/HeatHaze_Builtin"
     {
         _NoiseTex ("Soft Cloud Noise", 2D) = "white" {}
         _Distortion ("Distortion Strength", Range(0, 0.08)) = 0.018
+        _GlobalHeatIntensity ("Global Heat Intensity", Range(0, 1)) = 1
         _Speed ("Noise Speed", Range(0, 3)) = 0.75
         _RisePower ("Rise Power", Range(0, 3)) = 1.15
         _SideWave ("Side Wave", Range(0, 1)) = 0.18
@@ -39,6 +40,7 @@ Shader "Custom/HeatHaze_Builtin"
             float4 _NoiseTex_ST;
 
             float _Distortion;
+            float _GlobalHeatIntensity;
             float _Speed;
             float _RisePower;
             float _SideWave;
@@ -79,7 +81,7 @@ Shader "Custom/HeatHaze_Builtin"
                 float dist = distance(_WorldSpaceCameraPos, i.worldPos);
                 float distanceMask = smoothstep(_NearFadeDistance, _FarFullDistance, dist);
 
-                float finalMask = saturate(i.mask * distanceMask);
+                float finalMask = saturate(i.mask * distanceMask * _GlobalHeatIntensity);
 
                 float2 uv1 = i.uv * 2.2;
                 uv1.y += _Time.y * _Speed * 0.45;
