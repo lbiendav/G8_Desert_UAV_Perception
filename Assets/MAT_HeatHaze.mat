@@ -34,7 +34,7 @@ Material:
     - _DistanceStart: 5
     - _Distortion: 0.018
     - _FarFullDistance: 45
-    - _GlobalHeatIntensity: 0.1
+    - _GlobalHeatIntensity: 0.9444445
     - _HeightFade: 5
     - _HeightStart: 0
     - _NearFadeDistance: 8
