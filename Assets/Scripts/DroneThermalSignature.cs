@@ -4,6 +4,7 @@ public class DroneThermalSignature : MonoBehaviour
 {
     [Header("Environment")]
     public DesertEnvironmentController environment;
+    public ThermalGroundProfile thermalGroundProfile;
     public Terrain terrain;
 
     [Header("Renderers")]
@@ -16,6 +17,10 @@ public class DroneThermalSignature : MonoBehaviour
     public Color coldEmission = Color.black;
     public Color hotEmission = new Color(1f, 0.18f, 0.02f);
     public float maxEmissionMultiplier = 2.5f;
+    public float groundHeatInfluence = 1f;
+    public float heatResponseSpeed = 4f;
+
+    public float CurrentHeat { get; private set; }
 
     private void Reset()
     {
@@ -25,9 +30,16 @@ public class DroneThermalSignature : MonoBehaviour
     private void Update()
     {
         float environmentalHeat = environment != null ? environment.CurrentHeatIntensity : 1f;
+        float groundHeat = thermalGroundProfile != null
+            ? thermalGroundProfile.SampleHeatAtWorldPosition(transform.position, false)
+            : 1f;
         float altitudeHeat = GetAltitudeHeatFactor();
-        float heat = Mathf.Clamp01(environmentalHeat * altitudeHeat);
-        Color emission = Color.Lerp(coldEmission, hotEmission * maxEmissionMultiplier, heat);
+        float targetHeat = Mathf.Clamp01(environmentalHeat * Mathf.Lerp(1f, groundHeat, groundHeatInfluence) * altitudeHeat);
+        CurrentHeat = Application.isPlaying
+            ? Mathf.MoveTowards(CurrentHeat, targetHeat, heatResponseSpeed * Time.deltaTime)
+            : targetHeat;
+
+        Color emission = Color.Lerp(coldEmission, hotEmission * maxEmissionMultiplier, CurrentHeat);
 
         if (droneRenderers == null)
         {
