@@ -14,6 +14,14 @@ public static class DesertUAVSetupMenu
         AssetDatabase.SaveAssets();
     }
 
+    public static void BatchRebuildSovaStyleDrone()
+    {
+        EditorSceneManager.OpenScene("Assets/Scenes/SampleScene.unity");
+        RebuildSovaStyleDrone();
+        EditorSceneManager.SaveOpenScenes();
+        AssetDatabase.SaveAssets();
+    }
+
     [MenuItem("Tools/Desert UAV/Setup Day Night Preview")]
     public static void SetupDayNightPreview()
     {
@@ -242,8 +250,9 @@ public static class DesertUAVSetupMenu
         {
             drone = new GameObject("Thermal_Checkpoint_Drone");
             Undo.RegisterCreatedObjectUndo(drone, "Create Thermal Checkpoint Drone");
-            BuildSimpleDroneMesh(drone.transform);
         }
+
+        BuildSovaStyleDroneMesh(drone.transform);
 
         Undo.RecordObject(drone.transform, "Position Thermal Checkpoint Drone");
         drone.transform.position = GetTerrainWorldPoint(terrain, 0.35f, 0.35f, 12f);
@@ -293,6 +302,31 @@ public static class DesertUAVSetupMenu
         Selection.activeObject = drone;
         EditorGUIUtility.PingObject(drone);
         Debug.Log("Checkpoint drone demo is ready. Move Drone_Checkpoints children to change low/high thermal passes.");
+    }
+
+    [MenuItem("Tools/Desert UAV/Thermal/Rebuild SOVA-style Drone")]
+    public static void RebuildSovaStyleDrone()
+    {
+        GameObject drone = GameObject.Find("Thermal_Checkpoint_Drone");
+        if (drone == null)
+        {
+            drone = new GameObject("Thermal_Checkpoint_Drone");
+            Undo.RegisterCreatedObjectUndo(drone, "Create Thermal Checkpoint Drone");
+        }
+
+        BuildSovaStyleDroneMesh(drone.transform);
+
+        DroneThermalSignature signature = drone.GetComponent<DroneThermalSignature>();
+        if (signature != null)
+        {
+            signature.droneRenderers = drone.GetComponentsInChildren<Renderer>();
+            EditorUtility.SetDirty(signature);
+        }
+
+        EditorSceneManager.MarkSceneDirty(drone.scene);
+        Selection.activeObject = drone;
+        EditorGUIUtility.PingObject(drone);
+        Debug.Log("SOVA-style ducted drone mesh rebuilt.");
     }
 
     [MenuItem("Tools/Desert UAV/Set Time/Morning 06:00")]
@@ -476,26 +510,170 @@ public static class DesertUAVSetupMenu
         return profiles.ToArray();
     }
 
-    private static void BuildSimpleDroneMesh(Transform parent)
+    private static void BuildSovaStyleDroneMesh(Transform parent)
     {
-        GameObject body = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        Undo.RegisterCreatedObjectUndo(body, "Create Drone Body");
-        body.name = "Body";
-        body.transform.SetParent(parent, false);
-        body.transform.localScale = new Vector3(1.4f, 0.25f, 0.65f);
+        for (int i = parent.childCount - 1; i >= 0; i--)
+        {
+            Object.DestroyImmediate(parent.GetChild(i).gameObject);
+        }
 
-        GameObject wing = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        Undo.RegisterCreatedObjectUndo(wing, "Create Drone Wing");
-        wing.name = "Wing";
-        wing.transform.SetParent(parent, false);
-        wing.transform.localScale = new Vector3(3.2f, 0.08f, 0.35f);
+        Material bodyMaterial = GetOrCreateDroneMaterial("MAT_SOVA_Drone_Black", new Color(0.015f, 0.016f, 0.016f), 0.78f, 0.35f);
+        Material panelMaterial = GetOrCreateDroneMaterial("MAT_SOVA_Drone_Gunmetal", new Color(0.18f, 0.18f, 0.17f), 0.65f, 0.25f);
+        Material glassMaterial = GetOrCreateDroneMaterial("MAT_SOVA_Drone_Lens", new Color(0.02f, 0.06f, 0.09f), 0.95f, 0.1f);
 
-        GameObject tail = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        Undo.RegisterCreatedObjectUndo(tail, "Create Drone Tail");
-        tail.name = "Tail";
-        tail.transform.SetParent(parent, false);
-        tail.transform.localPosition = new Vector3(0f, 0.08f, -0.65f);
-        tail.transform.localScale = new Vector3(0.18f, 0.55f, 0.5f);
+        CreateBox(parent, "Main_Faceted_Body", new Vector3(0f, 0f, 0f), new Vector3(1.35f, 0.28f, 0.82f), Quaternion.identity, bodyMaterial);
+        CreateBox(parent, "Forward_Nose", new Vector3(0f, -0.02f, 0.55f), new Vector3(0.74f, 0.32f, 0.62f), Quaternion.Euler(0f, 0f, 0f), bodyMaterial);
+        CreateBox(parent, "Top_Spine", new Vector3(0f, 0.21f, -0.08f), new Vector3(0.28f, 0.16f, 1.15f), Quaternion.identity, panelMaterial);
+        CreateBox(parent, "Rear_Power_Block", new Vector3(0f, 0.02f, -0.58f), new Vector3(0.88f, 0.28f, 0.42f), Quaternion.identity, bodyMaterial);
+        CreateBox(parent, "Camera_Housing", new Vector3(0f, -0.16f, 0.88f), new Vector3(0.34f, 0.24f, 0.24f), Quaternion.identity, bodyMaterial);
+
+        GameObject lens = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        Undo.RegisterCreatedObjectUndo(lens, "Create Drone Lens");
+        lens.name = "Forward_IR_Lens";
+        lens.transform.SetParent(parent, false);
+        lens.transform.localPosition = new Vector3(0f, -0.16f, 1.02f);
+        lens.transform.localScale = new Vector3(0.16f, 0.16f, 0.08f);
+        lens.GetComponent<Renderer>().sharedMaterial = glassMaterial;
+
+        CreateBox(parent, "Left_Duct_Arm", new Vector3(-0.98f, 0f, 0.18f), new Vector3(1.35f, 0.12f, 0.18f), Quaternion.Euler(0f, 18f, 0f), bodyMaterial);
+        CreateBox(parent, "Right_Duct_Arm", new Vector3(0.98f, 0f, 0.18f), new Vector3(1.35f, 0.12f, 0.18f), Quaternion.Euler(0f, -18f, 0f), bodyMaterial);
+
+        CreateRotorAssembly(parent, "Left", new Vector3(-1.55f, 0.03f, 0.2f), bodyMaterial, panelMaterial);
+        CreateRotorAssembly(parent, "Right", new Vector3(1.55f, 0.03f, 0.2f), bodyMaterial, panelMaterial);
+
+        CreateBox(parent, "Left_Rear_Fin", new Vector3(-0.34f, 0.24f, -0.72f), new Vector3(0.18f, 0.55f, 0.58f), Quaternion.Euler(-18f, 0f, -18f), panelMaterial);
+        CreateBox(parent, "Right_Rear_Fin", new Vector3(0.34f, 0.24f, -0.72f), new Vector3(0.18f, 0.55f, 0.58f), Quaternion.Euler(-18f, 0f, 18f), panelMaterial);
+        CreateBox(parent, "Center_Tail_Fin", new Vector3(0f, 0.34f, -0.86f), new Vector3(0.16f, 0.72f, 0.5f), Quaternion.Euler(-12f, 0f, 0f), panelMaterial);
+
+        CreateBox(parent, "Left_Front_Guard", new Vector3(-0.45f, -0.03f, 0.56f), new Vector3(0.08f, 0.58f, 0.13f), Quaternion.Euler(0f, 0f, -22f), panelMaterial);
+        CreateBox(parent, "Right_Front_Guard", new Vector3(0.45f, -0.03f, 0.56f), new Vector3(0.08f, 0.58f, 0.13f), Quaternion.Euler(0f, 0f, 22f), panelMaterial);
+    }
+
+    private static void CreateRotorAssembly(Transform parent, string side, Vector3 center, Material bodyMaterial, Material panelMaterial)
+    {
+        GameObject duct = new GameObject($"{side}_Duct_Ring");
+        Undo.RegisterCreatedObjectUndo(duct, "Create Drone Duct Ring");
+        duct.transform.SetParent(parent, false);
+        duct.transform.localPosition = center;
+        duct.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+        MeshFilter ductFilter = duct.AddComponent<MeshFilter>();
+        ductFilter.sharedMesh = CreateTorusMesh($"{side}_Duct_Ring_Mesh", 0.62f, 0.07f, 64, 10);
+        MeshRenderer ductRenderer = duct.AddComponent<MeshRenderer>();
+        ductRenderer.sharedMaterial = bodyMaterial;
+
+        CreateBox(parent, $"{side}_Rotor_Crossbar", center, new Vector3(1.02f, 0.08f, 0.1f), Quaternion.identity, bodyMaterial);
+
+        GameObject rotorPivot = new GameObject($"{side}_Rotor_Spin_Pivot");
+        Undo.RegisterCreatedObjectUndo(rotorPivot, "Create Drone Rotor Spin Pivot");
+        rotorPivot.transform.SetParent(parent, false);
+        rotorPivot.transform.localPosition = center;
+        SovaRotorSpinner spinner = rotorPivot.AddComponent<SovaRotorSpinner>();
+        spinner.flightDegreesPerSecond = side == "Left" ? 2400f : -2400f;
+
+        CreateBox(rotorPivot.transform, $"{side}_Rotor_Motor", new Vector3(0f, 0.02f, 0f), new Vector3(0.24f, 0.14f, 0.24f), Quaternion.identity, panelMaterial);
+        CreateBox(rotorPivot.transform, $"{side}_Rotor_Blade_A", new Vector3(0f, 0.035f, 0f), new Vector3(0.88f, 0.025f, 0.12f), Quaternion.Euler(0f, 18f, 0f), panelMaterial);
+        CreateBox(rotorPivot.transform, $"{side}_Rotor_Blade_B", new Vector3(0f, 0.04f, 0f), new Vector3(0.88f, 0.025f, 0.12f), Quaternion.Euler(0f, 108f, 0f), panelMaterial);
+    }
+
+    private static GameObject CreateBox(Transform parent, string name, Vector3 localPosition, Vector3 localScale, Quaternion localRotation, Material material)
+    {
+        GameObject box = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        Undo.RegisterCreatedObjectUndo(box, $"Create {name}");
+        box.name = name;
+        box.transform.SetParent(parent, false);
+        box.transform.localPosition = localPosition;
+        box.transform.localRotation = localRotation;
+        box.transform.localScale = localScale;
+        box.GetComponent<Renderer>().sharedMaterial = material;
+        return box;
+    }
+
+    private static Mesh CreateTorusMesh(string name, float majorRadius, float minorRadius, int majorSegments, int minorSegments)
+    {
+        Vector3[] vertices = new Vector3[majorSegments * minorSegments];
+        Vector3[] normals = new Vector3[vertices.Length];
+        int[] triangles = new int[majorSegments * minorSegments * 6];
+
+        for (int major = 0; major < majorSegments; major++)
+        {
+            float majorAngle = major * Mathf.PI * 2f / majorSegments;
+            Vector3 majorCenter = new Vector3(Mathf.Cos(majorAngle) * majorRadius, Mathf.Sin(majorAngle) * majorRadius, 0f);
+
+            for (int minor = 0; minor < minorSegments; minor++)
+            {
+                float minorAngle = minor * Mathf.PI * 2f / minorSegments;
+                Vector3 normal = new Vector3(Mathf.Cos(majorAngle) * Mathf.Cos(minorAngle), Mathf.Sin(majorAngle) * Mathf.Cos(minorAngle), Mathf.Sin(minorAngle));
+                int vertexIndex = major * minorSegments + minor;
+                vertices[vertexIndex] = majorCenter + normal * minorRadius;
+                normals[vertexIndex] = normal;
+            }
+        }
+
+        int triangleIndex = 0;
+        for (int major = 0; major < majorSegments; major++)
+        {
+            int nextMajor = (major + 1) % majorSegments;
+            for (int minor = 0; minor < minorSegments; minor++)
+            {
+                int nextMinor = (minor + 1) % minorSegments;
+                int a = major * minorSegments + minor;
+                int b = nextMajor * minorSegments + minor;
+                int c = nextMajor * minorSegments + nextMinor;
+                int d = major * minorSegments + nextMinor;
+
+                triangles[triangleIndex++] = a;
+                triangles[triangleIndex++] = b;
+                triangles[triangleIndex++] = c;
+                triangles[triangleIndex++] = a;
+                triangles[triangleIndex++] = c;
+                triangles[triangleIndex++] = d;
+            }
+        }
+
+        Mesh mesh = new Mesh
+        {
+            name = name,
+            vertices = vertices,
+            normals = normals,
+            triangles = triangles
+        };
+        mesh.RecalculateBounds();
+        return mesh;
+    }
+
+    private static Material GetOrCreateDroneMaterial(string materialName, Color color, float smoothness, float metallic)
+    {
+        string materialPath = $"Assets/{materialName}.mat";
+        Material material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
+        if (material == null)
+        {
+            Shader shader = Shader.Find("Standard");
+            material = new Material(shader)
+            {
+                name = materialName
+            };
+            AssetDatabase.CreateAsset(material, materialPath);
+        }
+
+        material.color = color;
+        if (material.HasProperty("_Glossiness"))
+        {
+            material.SetFloat("_Glossiness", smoothness);
+        }
+
+        if (material.HasProperty("_Metallic"))
+        {
+            material.SetFloat("_Metallic", metallic);
+        }
+
+        if (material.HasProperty("_EmissionColor"))
+        {
+            material.EnableKeyword("_EMISSION");
+            material.SetColor("_EmissionColor", Color.black);
+        }
+
+        EditorUtility.SetDirty(material);
+        return material;
     }
 
     private static Transform[] CreateDefaultCheckpoints(Transform routeRoot, Terrain terrain)
