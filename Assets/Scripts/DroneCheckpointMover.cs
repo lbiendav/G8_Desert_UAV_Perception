@@ -17,7 +17,7 @@ public class DroneCheckpointMover : MonoBehaviour
 
     [Header("Movement")]
     public float speed = 18f;
-    public float turnSpeed = 120f;
+    public float turnSpeed = 5f;
     public bool faceMovementDirection = true;
 
     [Header("Altitude")]
@@ -63,7 +63,8 @@ public class DroneCheckpointMover : MonoBehaviour
         if (faceMovementDirection && toTarget.sqrMagnitude > 0.0001f)
         {
             Quaternion targetRotation = Quaternion.LookRotation(toTarget.normalized, Vector3.up);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, turnSpeed * Time.deltaTime);
+            float turnBlend = 1f - Mathf.Exp(-turnSpeed * Time.deltaTime);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, turnBlend);
         }
     }
 
