@@ -647,7 +647,8 @@ public static class DesertUAVSetupMenu
         Material material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
         if (material == null)
         {
-            Shader shader = Shader.Find("Standard");
+            bool usingHDRP = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline != null;
+            Shader shader = Shader.Find(usingHDRP ? "HDRP/Lit" : "Standard");
             material = new Material(shader)
             {
                 name = materialName
@@ -655,7 +656,20 @@ public static class DesertUAVSetupMenu
             AssetDatabase.CreateAsset(material, materialPath);
         }
 
-        material.color = color;
+        if (material.HasProperty("_BaseColor"))
+        {
+            material.SetColor("_BaseColor", color);
+        }
+        else
+        {
+            material.color = color;
+        }
+
+        if (material.HasProperty("_Smoothness"))
+        {
+            material.SetFloat("_Smoothness", smoothness);
+        }
+
         if (material.HasProperty("_Glossiness"))
         {
             material.SetFloat("_Glossiness", smoothness);
@@ -826,8 +840,11 @@ public static class DesertUAVSetupMenu
             return material;
         }
 
-        Shader shader = AssetDatabase.LoadAssetAtPath<Shader>("Assets/RainStreak_Builtin.shader");
-        if (shader == null)
+        bool usingHDRP = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline != null;
+        Shader shader = usingHDRP
+            ? Shader.Find("DesertUAV/HDRP/Rain Streak")
+            : AssetDatabase.LoadAssetAtPath<Shader>("Assets/RainStreak_Builtin.shader");
+        if (shader == null && !usingHDRP)
         {
             shader = Shader.Find("Custom/RainStreak_Builtin");
         }
@@ -836,7 +853,17 @@ public static class DesertUAVSetupMenu
         {
             name = "MAT_RainStreak"
         };
-        material.SetColor("_Color", new Color(0.65f, 0.78f, 1f, 0.35f));
+        Color rainColor = new Color(0.65f, 0.78f, 1f, 0.35f);
+        if (material.HasProperty("_BaseColor"))
+        {
+            material.SetColor("_BaseColor", rainColor);
+            material.SetFloat("_SurfaceType", 1f);
+            material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+        }
+        else
+        {
+            material.SetColor("_Color", rainColor);
+        }
         AssetDatabase.CreateAsset(material, materialPath);
         AssetDatabase.SaveAssets();
         return material;

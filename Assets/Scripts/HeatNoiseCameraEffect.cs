@@ -48,6 +48,12 @@ public class HeatNoiseCameraEffect : MonoBehaviour
 
     private void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
+        if (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline != null)
+        {
+            Graphics.Blit(source, destination);
+            return;
+        }
+
         EnsureMaterial();
 
         if (material == null)
@@ -56,8 +62,7 @@ public class HeatNoiseCameraEffect : MonoBehaviour
             return;
         }
 
-        float heat = environment != null ? environment.CurrentHeatIntensity : 1f;
-        heat *= GetDroneAltitudeHeatFactor();
+        float heat = GetCurrentHeatAmount();
 
         float baseNoise = infraredCamera ? infraredNoiseStrength : opticalNoiseStrength;
         material.SetFloat(HeatAmountId, heat);
@@ -65,6 +70,12 @@ public class HeatNoiseCameraEffect : MonoBehaviour
         material.SetFloat(TimeSeedId, Application.isPlaying ? Time.time : Time.realtimeSinceStartup);
 
         Graphics.Blit(source, destination, material);
+    }
+
+    public float GetCurrentHeatAmount()
+    {
+        float heat = environment != null ? environment.CurrentHeatIntensity : 1f;
+        return heat * GetDroneAltitudeHeatFactor();
     }
 
     private void EnsureMaterial()

@@ -43,7 +43,14 @@ public class DesertEnvironmentController : MonoBehaviour
     public Light sun;
     public Gradient sunColor;
     public AnimationCurve sunIntensityByTime = AnimationCurve.EaseInOut(0f, 0f, 24f, 0f);
-    public float maxSunIntensity = 1.2f;
+    [Tooltip("HDRP directional-light intensity in lux.")]
+    public float maxSunIntensity = 15000f;
+    [Range(1500f, 20000f)]
+    public float sunriseSunsetTemperature = 2800f;
+    [Range(1500f, 20000f)]
+    public float middaySunTemperature = 5600f;
+    [Range(0f, 1f)]
+    public float sunShadowStrength = 0.55f;
     public float nightAmbientIntensity = 0.08f;
     public float dayAmbientIntensity = 1f;
 
@@ -56,7 +63,12 @@ public class DesertEnvironmentController : MonoBehaviour
     public AnimationCurve heatByTime = AnimationCurve.EaseInOut(0f, 0.05f, 24f, 0.05f);
 
     public float CurrentHeatIntensity { get; private set; }
+    public float CurrentTemperatureCelsius { get; private set; }
     public float DayFactor { get; private set; }
+
+    [Header("Air Temperature")]
+    public float nightTemperatureCelsius = 18f;
+    public float dayTemperatureCelsius = 46f;
 
     private static readonly int GlobalHeatIntensityId = Shader.PropertyToID("_GlobalHeatIntensity");
 
@@ -137,14 +149,25 @@ public class DesertEnvironmentController : MonoBehaviour
         {
             sun.transform.rotation = Quaternion.Euler((normalizedTime * 360f) - 90f, 170f, 0f);
             sun.intensity = maxSunIntensity * DayFactor * (1f - rainIntensity * 0.65f);
-            sun.color = sunColor.Evaluate(normalizedTime);
+            sun.useColorTemperature = true;
+            sun.colorTemperature = Mathf.Lerp(
+                sunriseSunsetTemperature,
+                middaySunTemperature,
+                Mathf.SmoothStep(0f, 1f, DayFactor));
+            sun.color = Color.white;
+            sun.shadowStrength = sunShadowStrength;
         }
 
         RenderSettings.ambientIntensity = Mathf.Lerp(nightAmbientIntensity, dayAmbientIntensity, DayFactor);
 
         float timeHeat = Mathf.Clamp01(heatByTime.Evaluate(timeOfDay));
         float rainFactor = rainKillsHeatImmediately && rainIntensity > 0.01f ? 0f : 1f - rainIntensity;
-        CurrentHeatIntensity = Mathf.Clamp01(timeHeat * rainFactor);
+        CurrentTemperatureCelsius = Mathf.Lerp(
+            nightTemperatureCelsius,
+            dayTemperatureCelsius,
+            timeHeat);
+        CurrentHeatIntensity = Mathf.Clamp01(
+            Mathf.InverseLerp(22f, dayTemperatureCelsius, CurrentTemperatureCelsius) * rainFactor);
 
         if (heatHazeMaterial != null)
         {
