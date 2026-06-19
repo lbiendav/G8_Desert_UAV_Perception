@@ -42,6 +42,14 @@ public class TerrainThermalEmissionOverlay : MonoBehaviour
 
     private void Update()
     {
+        CacheComponents();
+        if (meshRenderer != null)
+        {
+            // The overlay is sensor data, not part of the visible editor scene.
+            // Runtime camera culling decides whether EO/IR cameras can see it.
+            meshRenderer.forceRenderingOff = !Application.isPlaying;
+        }
+
         ApplyMaterialProperties();
     }
 
@@ -169,7 +177,12 @@ public class TerrainThermalEmissionOverlay : MonoBehaviour
             return;
         }
 
-        if (overlayShader == null)
+        bool usingHDRP = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline != null;
+        if (usingHDRP)
+        {
+            overlayShader = Shader.Find("DesertUAV/HDRP/Terrain Thermal Overlay");
+        }
+        else if (overlayShader == null)
         {
             overlayShader = Shader.Find("Custom/TerrainThermalEmissionOverlay_Builtin");
         }
@@ -197,5 +210,13 @@ public class TerrainThermalEmissionOverlay : MonoBehaviour
 
         meshRenderer.sharedMaterial.SetFloat(GlobalHeatIntensityId, Mathf.Clamp01(environmentHeat));
         meshRenderer.sharedMaterial.SetFloat(EmissionMultiplierId, emissionMultiplier);
+
+        if (meshRenderer.sharedMaterial.HasProperty("_EmissiveColor"))
+        {
+            Color thermalColor = new Color(1f, 0.18f, 0.03f, 1f);
+            meshRenderer.sharedMaterial.SetColor(
+                "_EmissiveColor",
+                thermalColor * Mathf.Clamp01(environmentHeat) * emissionMultiplier);
+        }
     }
 }

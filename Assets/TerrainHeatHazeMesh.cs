@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering.HighDefinition;
 
+[ExecuteAlways]
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class TerrainHeatHazeMesh : MonoBehaviour
 {
@@ -27,15 +29,36 @@ public class TerrainHeatHazeMesh : MonoBehaviour
     [Tooltip("Heat multiplier per Terrain Layer index. Example: sand high, rock medium, soil low, water zero.")]
     public float[] terrainLayerHeatMultipliers = { 1f };
 
+    [Header("HDRP Distortion")]
+    public DesertEnvironmentController environment;
+    [Tooltip("HDRP distortion is measured approximately in screen pixels.")]
+    [Range(0f, 32f)]
+    public float distortionStrength = 3f;
+    public Vector2 distortionTiling = new Vector2(7f, 7f);
+    public Vector2 distortionScroll = new Vector2(0.035f, 0.11f);
+    [Range(0f, 1f)]
+    public float minimumTriangleHeat = 0.04f;
+
     [Header("Auto Update")]
     public bool generateOnStart = true;
     public bool updateInEditor = true;
 
     private MeshFilter meshFilter;
+    private MeshRenderer meshRenderer;
+    private MaterialPropertyBlock propertyBlock;
+    private static readonly int DistortionScaleId = Shader.PropertyToID("_DistortionScale");
+    private static readonly int DistortionVectorMapStId = Shader.PropertyToID("_DistortionVectorMap_ST");
 
     void Awake()
     {
-        meshFilter = GetComponent<MeshFilter>();
+        CacheComponents();
+    }
+
+    void OnEnable()
+    {
+        CacheComponents();
+        EnableDistortionOnAllCameras();
+        ApplyDistortionProperties();
     }
 
     void Start()
@@ -46,6 +69,11 @@ public class TerrainHeatHazeMesh : MonoBehaviour
         }
     }
 
+    void Update()
+    {
+        ApplyDistortionProperties();
+    }
+
 #if UNITY_EDITOR
     void OnValidate()
     {
@@ -53,6 +81,10 @@ public class TerrainHeatHazeMesh : MonoBehaviour
         heightOffset = Mathf.Max(0f, heightOffset);
         heightSoftness = Mathf.Max(0.01f, heightSoftness);
         slopeSoftness = Mathf.Max(0.01f, slopeSoftness);
+        distortionStrength = Mathf.Max(0f, distortionStrength);
+        distortionTiling.x = Mathf.Max(0.01f, distortionTiling.x);
+        distortionTiling.y = Mathf.Max(0.01f, distortionTiling.y);
+        minimumTriangleHeat = Mathf.Clamp01(minimumTriangleHeat);
 
         if (!Application.isPlaying && updateInEditor)
         {
@@ -73,7 +105,7 @@ public class TerrainHeatHazeMesh : MonoBehaviour
 
         if (meshFilter == null)
         {
-            meshFilter = GetComponent<MeshFilter>();
+            CacheComponents();
         }
 
         TerrainData data = terrain.terrainData;
@@ -160,13 +192,19 @@ public class TerrainHeatHazeMesh : MonoBehaviour
                 int c = i + 1;
                 int d = i + resolution + 2;
 
-                tris.Add(a);
-                tris.Add(b);
-                tris.Add(c);
+                if ((colors[a].a + colors[b].a + colors[c].a) / 3f >= minimumTriangleHeat)
+                {
+                    tris.Add(a);
+                    tris.Add(b);
+                    tris.Add(c);
+                }
 
-                tris.Add(c);
-                tris.Add(b);
-                tris.Add(d);
+                if ((colors[c].a + colors[b].a + colors[d].a) / 3f >= minimumTriangleHeat)
+                {
+                    tris.Add(c);
+                    tris.Add(b);
+                    tris.Add(d);
+                }
             }
         }
 
@@ -179,6 +217,56 @@ public class TerrainHeatHazeMesh : MonoBehaviour
         mesh.RecalculateBounds();
 
         meshFilter.sharedMesh = mesh;
+    }
+
+    private void CacheComponents()
+    {
+        if (meshFilter == null)
+            meshFilter = GetComponent<MeshFilter>();
+        if (meshRenderer == null)
+            meshRenderer = GetComponent<MeshRenderer>();
+    }
+
+    private void ApplyDistortionProperties()
+    {
+        CacheComponents();
+        if (meshRenderer == null || meshRenderer.sharedMaterial == null)
+            return;
+
+        Material material = meshRenderer.sharedMaterial;
+        float heat = environment != null ? environment.CurrentHeatIntensity : 1f;
+        float time = Application.isPlaying ? Time.time : Time.realtimeSinceStartup;
+        Vector2 offset = distortionScroll * time;
+
+        propertyBlock ??= new MaterialPropertyBlock();
+        meshRenderer.GetPropertyBlock(propertyBlock);
+        propertyBlock.SetFloat(DistortionScaleId, distortionStrength * Mathf.Clamp01(heat));
+        propertyBlock.SetVector(
+            DistortionVectorMapStId,
+            new Vector4(distortionTiling.x, distortionTiling.y, offset.x, offset.y));
+        meshRenderer.SetPropertyBlock(propertyBlock);
+    }
+
+    private static void EnableDistortionOnAllCameras()
+    {
+        foreach (HDAdditionalCameraData cameraData in
+                 FindObjectsByType<HDAdditionalCameraData>(
+                     FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            cameraData.customRenderingSettings = true;
+            cameraData.renderingPathCustomFrameSettings.SetEnabled(
+                FrameSettingsField.Distortion, true);
+            cameraData.renderingPathCustomFrameSettings.SetEnabled(
+                FrameSettingsField.RoughDistortion, true);
+            cameraData.renderingPathCustomFrameSettings.SetEnabled(
+                FrameSettingsField.TransparentObjects, true);
+            cameraData.renderingPathCustomFrameSettingsOverrideMask.mask[
+                (uint)FrameSettingsField.Distortion] = true;
+            cameraData.renderingPathCustomFrameSettingsOverrideMask.mask[
+                (uint)FrameSettingsField.RoughDistortion] = true;
+            cameraData.renderingPathCustomFrameSettingsOverrideMask.mask[
+                (uint)FrameSettingsField.TransparentObjects] = true;
+        }
     }
 
     private float SampleTerrainLayerHeat(float[,,] alphamaps, int alphaWidth, int alphaHeight, int alphaLayers, float nx, float nz)

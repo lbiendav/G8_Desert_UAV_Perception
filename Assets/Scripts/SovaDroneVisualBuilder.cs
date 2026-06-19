@@ -161,12 +161,26 @@ public class SovaDroneVisualBuilder : MonoBehaviour
 
     private static Material CreateMaterial(string materialName, Color color, float smoothness, float metallic)
     {
-        Shader shader = Shader.Find("Standard");
+        bool usingHDRP = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline != null;
+        Shader shader = Shader.Find(usingHDRP ? "HDRP/Lit" : "Standard");
         Material material = new Material(shader)
         {
-            name = materialName,
-            color = color
+            name = materialName
         };
+
+        if (material.HasProperty("_BaseColor"))
+        {
+            material.SetColor("_BaseColor", color);
+        }
+        else
+        {
+            material.color = color;
+        }
+
+        if (material.HasProperty("_Smoothness"))
+        {
+            material.SetFloat("_Smoothness", smoothness);
+        }
 
         if (material.HasProperty("_Glossiness"))
         {
