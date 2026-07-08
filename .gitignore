@@ -71,6 +71,14 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
+# Downloaded/store-bought assets used for scene building (not tracked in repo)
+/[Aa]ssets/_[Gg]ame/[Aa]ssets_[Ff]rom_[Ss]tore/
+/[Aa]ssets/_[Gg]ame/[Aa]ssets_[Ff]rom_[Ss]tore.meta
+
+# Screenshots
+/[Aa]ssets/[Ss]creenshots/
+/[Aa]ssets/[Ss]creenshots.meta
+
 # macOS
 .DS_Store
 
