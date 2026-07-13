@@ -27,9 +27,13 @@ namespace DesertEnv
         public float DaylightFactor { get; private set; }
         public bool IsNight => DaylightFactor < 0.02f;
 
-        /// <summary>Extra dimming applied to the sun (1 = clear sky). The
-        /// WeatherSystem lowers this while it rains for an overcast look.</summary>
-        public float SunMultiplier { get; set; } = 1f;
+        /// <summary>0 = clear sky, 1 = sun fully choked by dust.
+        /// Set by the SandstormSystem while a storm blows.</summary>
+        public float SunDimming01 { get; set; }
+
+        /// <summary>0 = clear sky, 1 = thick rain clouds blocking the sun.
+        /// Set by the RainCloudSystem while it rains.</summary>
+        public float OvercastDimming01 { get; set; }
 
         public void SetTimeOfDay(float t01)
         {
@@ -60,8 +64,13 @@ namespace DesertEnv
                 m_Sun.transform.rotation = Quaternion.Euler(sunPitch, m_SunYawDegrees, 0f);
                 DaylightFactor = Mathf.Clamp01(-m_Sun.transform.forward.y * 1.25f);
 
-                m_Sun.intensity = m_SunPeakLux * Mathf.Pow(Mathf.Max(DaylightFactor, 0.0001f), 1.15f) * SunMultiplier;
-                m_Sun.colorTemperature = Mathf.Lerp(1900f, 6500f, Mathf.Clamp01(DaylightFactor * 1.8f));
+                float dim = Mathf.Clamp01(SunDimming01);
+                float overcast = Mathf.Clamp01(OvercastDimming01);
+                m_Sun.intensity = m_SunPeakLux * Mathf.Pow(Mathf.Max(DaylightFactor, 0.0001f), 1.15f)
+                                  * (1f - dim * 0.92f) * (1f - overcast * 0.85f);
+                float kelvin = Mathf.Lerp(1900f, 6500f, Mathf.Clamp01(DaylightFactor * 1.8f));
+                // suspended dust filters the light toward a deep amber
+                m_Sun.colorTemperature = Mathf.Lerp(kelvin, 2600f, dim * 0.8f);
                 // below the horizon the sun must not light the scene from underneath
                 m_Sun.enabled = DaylightFactor > 0.002f;
             }
