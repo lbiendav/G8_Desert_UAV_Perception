@@ -28,7 +28,7 @@ public class ThermalGroundProfile : MonoBehaviour
     public DesertEnvironmentController environment;
     [Range(0f, 1f)]
     public float defaultTerrainHeat = 0.35f;
-    public float globalEmissionMultiplier = 1f;
+    public float globalEmissionMultiplier = 1.5f; // Boosted default to make terrain glow brighter
     public bool applyMaterialEmissionEveryFrame = true;
 
     [Header("Terrain Heat By Geographic Layer")]

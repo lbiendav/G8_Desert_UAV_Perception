@@ -92,6 +92,10 @@ public class DesertEnvironmentController : MonoBehaviour
     public float skylightIntensity = 0.4f;
     public Color skylightColor = new Color(0.7f, 0.8f, 1f);
 
+    [Header("Lighting - Brightness Boost")]
+    [Range(1f, 3f)]
+    public float terrainBrightnessMultiplier = 1.5f;
+
     [Header("Heat & Thermal")]
     public Material heatHazeMaterial;
     [Range(0f, 1f)]
@@ -200,6 +204,7 @@ public class DesertEnvironmentController : MonoBehaviour
         dustIntensity = Mathf.Clamp01(dustIntensity);
         treeCount = Mathf.Max(0, treeCount);
         animalCount = Mathf.Max(0, animalCount);
+        terrainBrightnessMultiplier = Mathf.Max(1f, terrainBrightnessMultiplier);
         ApplyEnvironment();
         isValidating = false;
     }
@@ -224,7 +229,7 @@ public class DesertEnvironmentController : MonoBehaviour
         CalculateTemperatureAndHeat();
         UpdateWeatherUI();
         
-        RenderSettings.ambientIntensity = Mathf.Lerp(nightAmbientIntensity, dayAmbientIntensity, currentSunlight);
+        RenderSettings.ambientIntensity = Mathf.Lerp(nightAmbientIntensity, dayAmbientIntensity, currentSunlight) * terrainBrightnessMultiplier;
     }
 
     private void CalculateSunPositionAndIntensity()
@@ -262,7 +267,7 @@ public class DesertEnvironmentController : MonoBehaviour
         sun.transform.rotation = Quaternion.Euler(solarElevation, solarAzimuth, 0f);
 
         float rainFactor = 1f - (rainIntensity * 0.65f);
-        sun.intensity = maxSunIntensity * currentSunlight * rainFactor;
+        sun.intensity = maxSunIntensity * currentSunlight * rainFactor * terrainBrightnessMultiplier;
 
         sun.useColorTemperature = true;
         float sunColorFactor = 0f;
@@ -287,10 +292,13 @@ public class DesertEnvironmentController : MonoBehaviour
     {
         float tempCurve = heatByTime.Evaluate(timeOfDay);
         
+        // Temperature is determined by both the time of day curve and the direct sunlight shining on the terrain
+        float solarHeatingFactor = Mathf.Lerp(tempCurve, currentSunlight, 0.6f);
+
         currentTemperatureCelsius = Mathf.Lerp(
             nightTemperatureCelsius,
             dayTemperatureCelsius,
-            tempCurve);
+            solarHeatingFactor);
 
         float rainMod = rainKillsHeatImmediately && rainIntensity > 0.01f ? 0f : (1f - rainIntensity * 0.8f);
         float windMod = 1f - (windIntensity * 0.1f);
@@ -457,7 +465,7 @@ public class DesertEnvironmentController : MonoBehaviour
         terrainFillLight.intensity = Mathf.Lerp(
             nightFillIntensity,
             terrainFillIntensity,
-            currentSunlight);
+            currentSunlight) * terrainBrightnessMultiplier;
         terrainFillLight.color = terrainFillColor;
         terrainFillLight.useColorTemperature = false;
         terrainFillLight.shadows = LightShadows.None;
@@ -709,7 +717,7 @@ public class DesertEnvironmentController : MonoBehaviour
         skylightLight.intensity = Mathf.Lerp(
             nightFillIntensity * 0.5f,
             skylightIntensity * 15000f,
-            currentSunlight);
+            currentSunlight) * terrainBrightnessMultiplier;
         skylightLight.color = skylightColor;
         skylightLight.useColorTemperature = false;
         skylightLight.shadows = LightShadows.None;
