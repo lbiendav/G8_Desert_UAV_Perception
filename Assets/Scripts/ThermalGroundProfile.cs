@@ -59,7 +59,14 @@ public class ThermalGroundProfile : MonoBehaviour
     {
         defaultTerrainHeat = Mathf.Clamp01(defaultTerrainHeat);
         globalEmissionMultiplier = Mathf.Max(0f, globalEmissionMultiplier);
-        ApplyMaterialEmission();
+        if (applyMaterialEmissionEveryFrame)
+        {
+            ApplyMaterialEmission();
+        }
+        else
+        {
+            ClearMaterialEmission();
+        }
     }
 
     [ContextMenu("Rebuild Terrain Layer Profiles")]
@@ -127,6 +134,41 @@ public class ThermalGroundProfile : MonoBehaviour
             Color emission = target.emissionColor * (heat * target.emissionMultiplier * globalEmissionMultiplier);
             target.material.EnableKeyword("_EMISSION");
             target.material.SetColor(propertyId, emission);
+        }
+    }
+
+    [ContextMenu("Clear Thermal Material Emission")]
+    public void ClearMaterialEmission()
+    {
+        if (pbrMaterials == null)
+        {
+            return;
+        }
+
+        int configuredPropertyId = emissionColorProperty == "_EmissionColor"
+            ? EmissionColorId
+            : Shader.PropertyToID(emissionColorProperty);
+        int hdrpEmissionId = Shader.PropertyToID("_EmissiveColor");
+
+        for (int i = 0; i < pbrMaterials.Length; i++)
+        {
+            Material material = pbrMaterials[i]?.material;
+            if (material == null)
+            {
+                continue;
+            }
+
+            if (material.HasProperty(configuredPropertyId))
+            {
+                material.SetColor(configuredPropertyId, Color.black);
+            }
+
+            if (material.HasProperty(hdrpEmissionId))
+            {
+                material.SetColor(hdrpEmissionId, Color.black);
+            }
+
+            material.DisableKeyword("_EMISSION");
         }
     }
 
