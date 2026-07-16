@@ -48,6 +48,11 @@ namespace DesertEnv
 
         public int ActiveCount => m_Devils.Count;
 
+        /// <summary>Master effects switch (set by the WeatherDirector).
+        /// While true no new devils spawn and the live ones fade out the
+        /// same way they do when bad weather rolls in.</summary>
+        public bool Suppressed { get; set; }
+
         private static readonly int s_UnlitColorId = Shader.PropertyToID("_UnlitColor");
 
         private class Devil
@@ -95,7 +100,7 @@ namespace DesertEnv
         private void Update()
         {
             float dt = Time.deltaTime;
-            bool allowed = ConditionsAllow(out float heat01);
+            bool allowed = ConditionsAllow(out float heat01) && !Suppressed;
 
             if (m_MatInstance != null && m_DayNight != null)
             {

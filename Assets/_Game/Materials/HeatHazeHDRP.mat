@@ -31,7 +31,7 @@ Material:
     m_Floats:
     - _Distortion: 0.018
     - _FarFullDistance: 90
-    - _GlobalStrength: 1
+    - _GlobalStrength: 0.6028032
     - _NearFadeDistance: 12
     - _RisePower: 1.15
     - _SideWave: 0.18

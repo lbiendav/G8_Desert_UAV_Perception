@@ -29,6 +29,7 @@ namespace DesertEnv
         private static readonly Color s_PanelColor = new Color(0f, 0f, 0f, 0.55f);
         private static readonly Color s_ButtonColor = new Color(0.22f, 0.22f, 0.22f, 0.9f);
         private static readonly Color s_ButtonActiveColor = new Color(0.15f, 0.55f, 0.2f, 0.95f);
+        private static readonly Color s_ButtonOffColor = new Color(0.6f, 0.14f, 0.12f, 0.95f);
 
         private static readonly DesertWeather[] s_Order =
         {
@@ -42,7 +43,11 @@ namespace DesertEnv
         private Font m_Font;
         private Text m_StatusText;
         private Text m_AutoButtonText;
+        private Text m_MasterButtonText;
+        private Image m_MasterButtonImage;
+        private Button m_AutoButton;
         private readonly Image[] m_ButtonImages = new Image[5];
+        private readonly Button[] m_Buttons = new Button[5];
 
         private void Awake()
         {
@@ -89,8 +94,10 @@ namespace DesertEnv
                 return;
             }
 
-            string line1 = "Đang: " + LabelOf(m_Director.Current);
-            if (m_Director.AutoCycle)
+            bool fx = m_Director.EffectsEnabled;
+
+            string line1 = fx ? "Đang: " + LabelOf(m_Director.Current) : "Hiệu ứng đã tắt";
+            if (fx && m_Director.AutoCycle)
             {
                 line1 += "  (còn " + Mathf.CeilToInt(m_Director.SecondsUntilChange) + "s)";
             }
@@ -132,15 +139,32 @@ namespace DesertEnv
             {
                 if (m_ButtonImages[i] != null)
                 {
-                    m_ButtonImages[i].color = m_Director.Current == s_Order[i]
+                    m_ButtonImages[i].color = fx && m_Director.Current == s_Order[i]
                         ? s_ButtonActiveColor
                         : s_ButtonColor;
+                }
+                if (m_Buttons[i] != null)
+                {
+                    m_Buttons[i].interactable = fx;
                 }
             }
 
             if (m_AutoButtonText != null)
             {
                 m_AutoButtonText.text = m_Director.AutoCycle ? "Tự động: BẬT" : "Tự động: TẮT";
+            }
+            if (m_AutoButton != null)
+            {
+                m_AutoButton.interactable = fx;
+            }
+
+            if (m_MasterButtonText != null)
+            {
+                m_MasterButtonText.text = fx ? "Hiệu ứng: BẬT" : "Hiệu ứng: TẮT";
+            }
+            if (m_MasterButtonImage != null)
+            {
+                m_MasterButtonImage.color = fx ? s_ButtonActiveColor : s_ButtonOffColor;
             }
         }
 
@@ -191,15 +215,22 @@ namespace DesertEnv
             AddText(panel.transform, "Thời tiết sa mạc", 20, FontStyle.Bold);
             m_StatusText = AddText(panel.transform, "...", 15, FontStyle.Normal);
 
+            // master on/off switch for every weather effect
+            m_MasterButtonImage = AddButton(panel.transform, "Hiệu ứng: BẬT",
+                () => m_Director.EffectsEnabled = !m_Director.EffectsEnabled);
+            m_MasterButtonText = m_MasterButtonImage.GetComponentInChildren<Text>();
+
             for (int i = 0; i < s_Order.Length; i++)
             {
                 DesertWeather w = s_Order[i];
                 m_ButtonImages[i] = AddButton(panel.transform, LabelOf(w), () => m_Director.SetWeather(w));
+                m_Buttons[i] = m_ButtonImages[i].GetComponent<Button>();
             }
 
             Image autoImg = AddButton(panel.transform, "Tự động: BẬT",
                 () => m_Director.AutoCycle = !m_Director.AutoCycle);
             m_AutoButtonText = autoImg.GetComponentInChildren<Text>();
+            m_AutoButton = autoImg.GetComponent<Button>();
         }
 
         private Text AddText(Transform parent, string content, int size, FontStyle style)

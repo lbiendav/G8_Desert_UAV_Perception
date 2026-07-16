@@ -84,3 +84,6 @@ crashlytics-build.properties
 
 # Claude Code local settings (keep shared config, ignore local overrides)
 .claude/settings.local.json
+
+#
+Assets/_Game/Assets_From_Store

@@ -31,6 +31,7 @@ namespace DesertEnv
         [SerializeField] private WeatherSystem m_RainSystem;
         [SerializeField] private SandstormSystem m_Sandstorm;
         [SerializeField] private DesertWindController m_Wind;
+        [SerializeField] private DustDevilSystem m_DustDevils;
 
         [Header("Cycle")]
         [SerializeField] private bool m_AutoCycle = true;
@@ -48,6 +49,26 @@ namespace DesertEnv
             set => m_AutoCycle = value;
         }
 
+        /// <summary>Master switch for every weather effect. Off = wind,
+        /// dust, rain (and with it thunder) ramp to zero and dust devils
+        /// fade out; the auto cycle pauses. On = the auto-cycle setting is
+        /// restored and the current weather state is re-applied.</summary>
+        public bool EffectsEnabled
+        {
+            get => m_EffectsEnabled;
+            set
+            {
+                if (m_EffectsEnabled == value)
+                {
+                    return;
+                }
+                m_EffectsEnabled = value;
+                ApplyEffectsEnabled();
+            }
+        }
+
+        private bool m_EffectsEnabled = true;
+        private bool m_AutoCycleBeforeOff;
         private float m_Timer;
 
         private struct StateSpec
@@ -93,6 +114,7 @@ namespace DesertEnv
             if (m_RainSystem == null) m_RainSystem = FindFirstObjectByType<WeatherSystem>();
             if (m_Sandstorm == null) m_Sandstorm = FindFirstObjectByType<SandstormSystem>();
             if (m_Wind == null) m_Wind = FindFirstObjectByType<DesertWindController>();
+            if (m_DustDevils == null) m_DustDevils = FindFirstObjectByType<DustDevilSystem>();
         }
 
         private void OnDestroy()
@@ -134,6 +156,13 @@ namespace DesertEnv
             StateSpec spec = s_Specs[(int)weather];
             m_Timer = Random.Range(spec.duration.x, spec.duration.y);
 
+            if (!m_EffectsEnabled)
+            {
+                // remember the state but keep everything off; the targets
+                // are applied again when EffectsEnabled goes back to true
+                return;
+            }
+
             if (m_Wind != null)
             {
                 m_Wind.TargetStrength01 = spec.wind;
@@ -148,6 +177,42 @@ namespace DesertEnv
             }
 
             Debug.Log($"[WeatherDirector] Weather -> {weather} for {m_Timer:0}s");
+        }
+
+        private void ApplyEffectsEnabled()
+        {
+            if (!m_EffectsEnabled)
+            {
+                m_AutoCycleBeforeOff = m_AutoCycle;
+                m_AutoCycle = false;
+                if (m_Wind != null)
+                {
+                    m_Wind.TargetStrength01 = 0f;
+                }
+                if (m_Sandstorm != null)
+                {
+                    m_Sandstorm.TargetIntensity01 = 0f;
+                }
+                if (m_RainSystem != null && m_RainSystem.IsRaining)
+                {
+                    m_RainSystem.SetRaining(false);
+                }
+                if (m_DustDevils != null)
+                {
+                    m_DustDevils.Suppressed = true;
+                }
+                Debug.Log("[WeatherDirector] Weather effects OFF");
+            }
+            else
+            {
+                if (m_DustDevils != null)
+                {
+                    m_DustDevils.Suppressed = false;
+                }
+                m_AutoCycle = m_AutoCycleBeforeOff;
+                SetWeather(Current);
+                Debug.Log("[WeatherDirector] Weather effects ON");
+            }
         }
 
         private static DesertWeather RollNext(DesertWeather from)
