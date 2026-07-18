@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class DroneThermalSignature : MonoBehaviour
 {
+    private static readonly int BuiltInEmissionId = Shader.PropertyToID("_EmissionColor");
+    private static readonly int HdrpEmissionId = Shader.PropertyToID("_EmissiveColor");
+
     [Header("Environment")]
     public DesertEnvironmentController environment;
     public ThermalGroundProfile thermalGroundProfile;
@@ -55,13 +58,27 @@ public class DroneThermalSignature : MonoBehaviour
             }
 
             Material material = Application.isPlaying ? targetRenderer.material : targetRenderer.sharedMaterial;
-            if (material == null || !material.HasProperty(emissionColorProperty))
+            if (material == null)
             {
                 continue;
             }
 
             material.EnableKeyword("_EMISSION");
-            material.SetColor(emissionColorProperty, emission);
+            int configuredPropertyId = Shader.PropertyToID(emissionColorProperty);
+            if (material.HasProperty(configuredPropertyId))
+            {
+                material.SetColor(configuredPropertyId, emission);
+            }
+
+            if (material.HasProperty(BuiltInEmissionId))
+            {
+                material.SetColor(BuiltInEmissionId, emission);
+            }
+
+            if (material.HasProperty(HdrpEmissionId))
+            {
+                material.SetColor(HdrpEmissionId, emission);
+            }
         }
     }
 

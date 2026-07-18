@@ -21,9 +21,13 @@ public class TerrainThermalEmissionOverlay : MonoBehaviour
     public Shader overlayShader;
     public bool generateOnStart = true;
     public bool updateInEditor = true;
+    public bool showInSceneView = true;
 
     private MeshFilter meshFilter;
     private MeshRenderer meshRenderer;
+    private TerrainData generatedTerrainData;
+    private int generatedResolution;
+    private MaterialPropertyBlock propertyBlock;
     private static readonly int GlobalHeatIntensityId = Shader.PropertyToID("_GlobalHeatIntensity");
     private static readonly int EmissionMultiplierId = Shader.PropertyToID("_EmissionMultiplier");
 
@@ -40,14 +44,31 @@ public class TerrainThermalEmissionOverlay : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        CacheComponents();
+        if (generateOnStart || meshFilter.sharedMesh == null)
+        {
+            Generate();
+        }
+    }
+
     private void Update()
     {
         CacheComponents();
         if (meshRenderer != null)
         {
-            // The overlay is sensor data, not part of the visible editor scene.
-            // Runtime camera culling decides whether EO/IR cameras can see it.
-            meshRenderer.forceRenderingOff = !Application.isPlaying;
+            meshRenderer.forceRenderingOff = !Application.isPlaying && !showInSceneView;
+            meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            meshRenderer.receiveShadows = false;
+        }
+
+        if (terrain != null &&
+            (meshFilter.sharedMesh == null ||
+             generatedTerrainData != terrain.terrainData ||
+             generatedResolution != resolution))
+        {
+            Generate();
         }
 
         ApplyMaterialProperties();
@@ -153,6 +174,8 @@ public class TerrainThermalEmissionOverlay : MonoBehaviour
         mesh.RecalculateNormals();
         mesh.RecalculateBounds();
         meshFilter.sharedMesh = mesh;
+        generatedTerrainData = data;
+        generatedResolution = resolution;
         ApplyMaterialProperties();
     }
 
@@ -208,15 +231,19 @@ public class TerrainThermalEmissionOverlay : MonoBehaviour
             ? thermalProfile.environment.CurrentHeatIntensity
             : 1f;
 
-        meshRenderer.sharedMaterial.SetFloat(GlobalHeatIntensityId, Mathf.Clamp01(environmentHeat));
-        meshRenderer.sharedMaterial.SetFloat(EmissionMultiplierId, emissionMultiplier);
+        propertyBlock ??= new MaterialPropertyBlock();
+        meshRenderer.GetPropertyBlock(propertyBlock);
+        propertyBlock.SetFloat(GlobalHeatIntensityId, Mathf.Clamp01(environmentHeat));
+        propertyBlock.SetFloat(EmissionMultiplierId, emissionMultiplier);
+        meshRenderer.SetPropertyBlock(propertyBlock);
 
         if (meshRenderer.sharedMaterial.HasProperty("_EmissiveColor"))
         {
             Color thermalColor = new Color(1f, 0.18f, 0.03f, 1f);
-            meshRenderer.sharedMaterial.SetColor(
+            propertyBlock.SetColor(
                 "_EmissiveColor",
                 thermalColor * Mathf.Clamp01(environmentHeat) * emissionMultiplier);
+            meshRenderer.SetPropertyBlock(propertyBlock);
         }
     }
 }

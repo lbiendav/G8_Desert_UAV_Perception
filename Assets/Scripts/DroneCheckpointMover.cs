@@ -25,12 +25,19 @@ public class DroneCheckpointMover : MonoBehaviour
     public bool keepAboveTerrain = true;
     public float minimumGroundClearance = 2f;
 
+    [Header("Autopilot Integration")]
+    [SerializeField] private DroneAutoPilot autoPilot;
+
     private int currentIndex;
     private int direction = 1;
     private bool isMoving;
 
     private void Start()
     {
+        if (autoPilot == null)
+        {
+            autoPilot = GetComponent<DroneAutoPilot>();
+        }
         isMoving = playOnStart;
     }
 
@@ -80,10 +87,26 @@ public class DroneCheckpointMover : MonoBehaviour
 
     public void RestartRoute()
     {
+        if (checkpoints == null || checkpoints.Length == 0)
+        {
+            return;
+        }
         currentIndex = 0;
         direction = 1;
         isMoving = true;
     }
+
+    public DroneAutoPilot GetAutoPilot()
+    {
+        if (autoPilot == null)
+        {
+            autoPilot = GetComponent<DroneAutoPilot>();
+        }
+        return autoPilot;
+    }
+
+    public bool IsMoving => isMoving;
+    public int CurrentCheckpointIndex => currentIndex;
 
     private void AdvanceCheckpoint()
     {
@@ -136,3 +159,4 @@ public class DroneCheckpointMover : MonoBehaviour
         return position;
     }
 }
+

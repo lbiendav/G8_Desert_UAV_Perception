@@ -792,6 +792,11 @@ public static class DesertUAVSetupMenu
     {
         Undo.RecordObject(rainParticleSystem, "Configure Rain Particle System");
 
+        if (rainParticleSystem.isPlaying)
+        {
+            rainParticleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+
         ParticleSystem.MainModule main = rainParticleSystem.main;
         main.loop = true;
         main.playOnAwake = false;

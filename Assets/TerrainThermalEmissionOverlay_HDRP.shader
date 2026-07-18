@@ -58,9 +58,15 @@ Shader "DesertUAV/HDRP/Terrain Thermal Overlay"
 
             float4 Frag(Varyings input) : SV_Target
             {
-                float heat = saturate(input.color.a * _GlobalHeatIntensity);
-                float3 emission = max(input.color.rgb, float3(0.3, 0.03, 0.0));
-                return float4(emission * heat * _EmissionMultiplier, heat * 0.35);
+                float environmentTemperature = lerp(0.12, 1.0, saturate(_GlobalHeatIntensity));
+                float heat = saturate(input.color.a * environmentTemperature);
+                float3 cold = float3(0.08, 0.0, 0.12);
+                float3 warm = float3(0.95, 0.08, 0.01);
+                float3 hot = float3(1.0, 0.72, 0.08);
+                float3 thermalColor = heat < 0.65
+                    ? lerp(cold, warm, heat / 0.65)
+                    : lerp(warm, hot, (heat - 0.65) / 0.35);
+                return float4(thermalColor * heat * _EmissionMultiplier, heat);
             }
             ENDHLSL
         }

@@ -39,6 +39,12 @@ public class SovaDroneVisualBuilder : MonoBehaviour
         lens.transform.localPosition = new Vector3(0f, -0.16f, 1.02f);
         lens.transform.localScale = new Vector3(0.16f, 0.16f, 0.08f);
         lens.GetComponent<Renderer>().sharedMaterial = lensMaterial;
+        
+        Collider lensCollider = lens.GetComponent<Collider>();
+        if (lensCollider != null)
+        {
+            DestroyImmediate(lensCollider);
+        }
 
         CreateBox(visualRoot, "Left_Duct_Arm", new Vector3(-0.98f, 0f, 0.18f), new Vector3(1.35f, 0.12f, 0.18f), Quaternion.Euler(0f, 18f, 0f), bodyMaterial);
         CreateBox(visualRoot, "Right_Duct_Arm", new Vector3(0.98f, 0f, 0.18f), new Vector3(1.35f, 0.12f, 0.18f), Quaternion.Euler(0f, -18f, 0f), bodyMaterial);
@@ -103,6 +109,13 @@ public class SovaDroneVisualBuilder : MonoBehaviour
         box.transform.localRotation = localRotation;
         box.transform.localScale = localScale;
         box.GetComponent<Renderer>().sharedMaterial = material;
+        
+        Collider collider = box.GetComponent<Collider>();
+        if (collider != null)
+        {
+            DestroyImmediate(collider);
+        }
+        
         return box;
     }
 

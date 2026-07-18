@@ -98,7 +98,7 @@ Material:
     - _EmissiveIntensityUnit: 0
     - _EnableFogOnTransparent: 0
     - _FarFullDistance: 45
-    - _GlobalHeatIntensity: 0.9444445
+    - _GlobalHeatIntensity: 0.9484444
     - _HeightFade: 5
     - _HeightStart: 0
     - _IncludeIndirectLighting: 1

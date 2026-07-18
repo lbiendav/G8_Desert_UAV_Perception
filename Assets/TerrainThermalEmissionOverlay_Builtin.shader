@@ -51,9 +51,15 @@ Shader "Custom/TerrainThermalEmissionOverlay_Builtin"
 
             fixed4 frag(v2f i) : SV_Target
             {
-                fixed heat = saturate(i.color.a * _GlobalHeatIntensity);
-                fixed3 emission = i.color.rgb * heat * _EmissionMultiplier;
-                return fixed4(emission, heat);
+                fixed environmentTemperature = lerp(0.12, 1.0, saturate(_GlobalHeatIntensity));
+                fixed heat = saturate(i.color.a * environmentTemperature);
+                fixed3 cold = fixed3(0.08, 0.0, 0.12);
+                fixed3 warm = fixed3(0.95, 0.08, 0.01);
+                fixed3 hot = fixed3(1.0, 0.72, 0.08);
+                fixed3 thermalColor = heat < 0.65
+                    ? lerp(cold, warm, heat / 0.65)
+                    : lerp(warm, hot, (heat - 0.65) / 0.35);
+                return fixed4(thermalColor * heat * _EmissionMultiplier, heat);
             }
             ENDCG
         }
